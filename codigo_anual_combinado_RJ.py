@@ -1,4 +1,4 @@
-__author__ = 'pengfeishen','marinab', 'tassianaH' and 'ThalitaO'
+__author__ = 'pengfeishen','marinab', 'TassianaH', 'J.Artur.B' 'ThalitaO'
 
 import numpy as np
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
@@ -38,10 +38,15 @@ lista_Vstorage_teorico = []
 lista_Vstorage_real = []
 lista_volume_rede_drenagem = []
 lista_volume_armazenado_ultimo_dia_ano = []
+lista_volume_total_demandado_diario =[]
+lista_todos_telhados_mes = []
+lista_todos_volumes_mes = []
+lista_todos_anos = []
+lista_todos_meses =[]
 for i in range(len(lista_area_telhado)):
 
     dados_de_chuva = pd.read_csv("T:\\Resultados_Capitulo_1_\\Jusante\\hadgem85.dat", sep='\s+',
-                                 engine='python')[4417919:4523327] #2048
+                                 engine='python')[5259455:5364863] #2056 BISSEXTO
     dados_de_chuva.head()
     mes = (dados_de_chuva['mes'])
     ano = (dados_de_chuva['ano'])
@@ -50,7 +55,7 @@ for i in range(len(lista_area_telhado)):
     Q_rain = (dados_de_chuva['prec'])
     Qrain = ((Q_rain * 0) / 1000) / dt
     tQrain = Qrain.tolist()
-    Area_telhado = lista_area_telhado[i]  #trocar "area_telhado" pelo mesmo nome da sua variavel da area do telhado
+    Area_telhado = lista_area_telhado[i]
     Qin_file = (((Q_rain * Area_telhado) / 1000) * 0.8) / dt
     lista_Qin_file = Qin_file.tolist()
     Vin_telhado = (((sum(Qin_file)) * dt * 1000))
@@ -60,8 +65,7 @@ for i in range(len(lista_area_telhado)):
     print('Volume escoado no telhado {:.4f}'.format(((sum(Qin_file)) * dt * 1000)))  # L
 
 
-        #volume_reservatorio = lista_vol_reservatorio[j] #trocar "volume_reservatorio" pelo mesmo nome da sua variavel
-        # Evapotranspiração
+
     Emax_file = pd.read_csv('Emax_cada_mes_ano_bissexto.csv')# Emax_cada_mes_ano_normal.csv #Emax_cada_mes_ano_bissexto
     tEmax = Emax_file['ET'].tolist()
     tQin = lista_Qin_file
@@ -415,7 +419,7 @@ for i in range(len(lista_area_telhado)):
         # data[['Qin', 'Qover', 'Qpipe', 'Qinf_sz']].plot(figsize=(9, 5), linewidth=1.5)
 
         # plt.show()
-        #data.to_csv('water_flow_results_2027_ri.csv', index=False, sep=';', decimal=',')
+
 
         ###  6. Water balance
 
@@ -594,15 +598,13 @@ for i in range(len(lista_area_telhado)):
                     volume_armazenado_diario.append(volume_auxiliar[-1] - demanda)
                     volume_diario.append(sum(df_dia["Qpipe_biorretencao"] * dt))
 
-                dict_data_reservatorio = {
-                    # 'volume_armazenado': volume_armazenado_diario
-                    'demanda': lista_demanda,
-                    'dias': lista_dias
-                }
-                dados_reservatorio = pd.DataFrame(dict_data_reservatorio)
-                # dados_reservatorio.to_csv('demanda_2027.csv', index=False, sep=';', decimal=',')
+                lista_volume_total_demandado_diario.append(sum(lista_demanda) * 1000)
+                lista_todos_telhados_mes.append(Area_telhado)
+                lista_todos_volumes_mes.append(volume_reservatorio)
+                lista_todos_anos.append(Ano_simulado)
+                lista_todos_meses.append(mes)
 
-            # print('Volume entrada biorretenção {:.4f}'.format(sum(volume_biorretencao)))
+
             print("\033[1:30m........ Dados Reservatório ........ \033[m")
 
             print('Volume total demandado {:.4f}'.format(((sum(lista_demanda)) * 1000)))  # L
@@ -649,8 +651,19 @@ dict_infos = {
         'rede_drenagem': lista_volume_rede_drenagem,
         'V_storage_reservatorio': lista_volume_armazenado_ultimo_dia_ano
 }
-
 dados_do_sistema = pd.DataFrame(dict_infos)
-dados_do_sistema.to_csv('infos_sistema_RJ_hadgem8.5_2048.csv', index=False, sep=';', decimal=',')
+dados_do_sistema.to_csv('infos_sistema_RJ_hadgem8.5_2056.csv', index=False, sep=';', decimal=',')
+
+dict_demanda = {
+    'Ano': lista_todos_anos,
+    'V_mensal': lista_volume_total_demandado_diario,
+    'Area_telhado': lista_todos_telhados_mes,
+    'volume_reservatorio': lista_todos_volumes_mes,
+    'Mês': lista_todos_meses
+}
+dados_do_sistema = pd.DataFrame(dict_demanda)
+dados_do_sistema.to_csv('infos_demanda_mensal_8.5_2056.csv', index=False, sep=';', decimal=',')
+
+
 fim_tempo = datetime.datetime.now()
 print('Elapsed time: ', fim_tempo - inicio_tempo)
